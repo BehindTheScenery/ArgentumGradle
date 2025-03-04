@@ -1,0 +1,23 @@
+# gradle
+.gradle
+build
+repo
+
+# eclipse
+.settings
+.metadata
+.classpath
+.project
+bin
+/.vscode/
+
+# intellij
+out
+*.idea
+*.iml
+
+snapshots
+
+/examples/*/run/ # this is where the run files are stored
+/neoform/tests
+**/version.neogradle
