@@ -6,6 +6,7 @@ plugins {
     id 'maven-publish'
     id 'org.cadixdev.licenser' version '0.6.1'
     id 'net.neoforged.gradleutils' version '3.0.0-alpha.10'
+    id 'co.uzzu.dotenv.gradle' version "4.0.0"
 }
 
 gradleutils {
@@ -53,7 +54,7 @@ subprojects.forEach { Project subProject ->
 
     //General project metadata. Everything has the same version and group.
     subProject.version = subProject.rootProject.version
-    subProject.group = 'net.neoforged.gradle'
+    subProject.group = rootProject.group
     subProject.base.archivesName = "ng-${subProject.name.toLowerCase(Locale.ROOT)}"
 
     //Setup the java toolchain
@@ -233,27 +234,28 @@ subprojects.forEach { subProject ->
 }
 
 //Configure all the subprojects which are not plugins
-subprojects.forEach { subProject ->
-    subProject.afterEvaluate { Project evalSubProject ->
-        evalSubProject.publishing.repositories { RepositoryHandler repositories ->
-            maven gradleutils.getPublishingMaven()
-        }
-
-        if (evalSubProject.getPlugins().hasPlugin("java-gradle-plugin")) {
-            evalSubProject.publishing.publications { PublicationContainer publications ->
-                publications.create('pluginMaven', MavenPublication) { publication ->
-                    if (evalSubProject.name == 'userdev') {
-                        project.changelog.publish publication
-                    }
+subprojects {
+    publishing {
+        repositories {
+            maven {
+                name = "BTSM"
+                url = uri("https://maven.behindthescenery.online/repository/maven-releases/")
+                credentials {
+                    username = env.fetchOrNull("_USERNAME")
+                    password = env.fetchOrNull("_PASSWORD")
                 }
             }
-
-            return
         }
 
-        evalSubProject.publishing.publications { PublicationContainer publications ->
-            publications.create('maven', MavenPublication) { publication ->
-                publication.from evalSubProject.components.java
+        publications {
+            //noinspection GroovyAssignabilityCheck
+            gpr(MavenPublication) {
+                artifactId = project.name
+                groupId = project.group
+                version = project.version
+
+                artifact project.jar
+                artifact project.sourcesJar
             }
         }
     }
